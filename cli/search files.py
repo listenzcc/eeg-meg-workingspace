@@ -30,7 +30,11 @@ from python.io.search_meg_eeg_files import MEG_EEG_Files
 # Play ground
 if __name__ == "__main__":
     mef = MEG_EEG_Files()
-    mef.search_objs()
+    mef.search_files()
+    group = mef.files
+    print(mef.files)
+    group = mef.files.groupby(['fileMark', 'suffix'])
+    print(group.count())
 
 
 # %% ---- 2024-09-09 ------------------------
