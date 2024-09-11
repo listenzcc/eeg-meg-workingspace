@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    {% include "src/head.html" %}
+</head>
+
+<body class="bg-white">
+    <section class="bg-white max-w-3xl px-2 mx-auto py-3 md:px-4 md:py-6">
+        <div class="border-b border-black pb-3">
+            <div class="flex items-center">
+                <span class="block font-bold no-underline">Intro Page</span>
+            </div>
+        </div>
+        <div class="mt-4 md:mt-6 lg:mt-8">
+            <section id="mdContainer" class="pr-4 mt-4 lg:text-xl lg:pr-0">
+            </section>
+        </div>
+    </section>
+
+    <script>
+        renderMarkdownIntoHTML('intro.md', document.getElementById('mdContainer'))
+    </script>
+
+</body>
+
+</html>

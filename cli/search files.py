@@ -18,8 +18,8 @@ Functions:
 
 # %% ---- 2024-09-09 ------------------------
 # Requirements and constants
-import sys
 from python.io.search_meg_eeg_files import MEG_EEG_Files
+from rich import print
 
 
 # %% ---- 2024-09-09 ------------------------
@@ -33,7 +33,7 @@ if __name__ == "__main__":
     mef.search_files()
     group = mef.files
     print(mef.files)
-    group = mef.files.groupby(['fileMark', 'suffix'])
+    group = mef.files.groupby(['linkedFolder', 'dataType', 'suffix'])
     print(group.count())
 
 

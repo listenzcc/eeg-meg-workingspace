@@ -18,23 +18,27 @@ Functions:
 
 # %% ---- 2024-09-09 ------------------------
 # Requirements and constants
+import os
 from pathlib import Path
-from omegaconf import OmegaConf
-
 from loguru import logger
 
-# The folder containing the python and data subdirectories.
-project_root = Path(__file__).parent.parent
-logger.add(
-    project_root.joinpath('log/eeg-meg-workingspace.log'),
-    rotation='5 MB')
 
 # %% ---- 2024-09-09 ------------------------
 # Function and class
+class ProjectInfo:
+    projectName = 'EEG MEG WorkingSpace'
+    version = '0.1'
+    # The folder containing python/__init__.py(this file)
+    projectRoot = Path(__file__).parent.parent
 
 
 # %% ---- 2024-09-09 ------------------------
 # Play ground
+logger.add(
+    Path(
+        os.environ.get('HOME', '.'),
+        'log/{}.log'.format(ProjectInfo.projectName)),
+    rotation='5 MB')
 
 
 # %% ---- 2024-09-09 ------------------------

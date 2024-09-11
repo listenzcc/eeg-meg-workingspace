@@ -24,14 +24,14 @@ import pandas as pd
 
 from pathlib import Path
 from omegaconf import OmegaConf
-from .. import logger, project_root
+from .. import logger, ProjectInfo
 
 
 # %% ---- 2024-09-09 ------------------------
 # Function and class
 class MEG_EEG_Files(object):
-    links = project_root.joinpath('data/links.yaml')
-    folders = None
+    links = ProjectInfo.projectRoot.joinpath('data/links.yaml')
+    linked_folders = None
 
     def __init__(self):
         self.get_linked_folders()
@@ -45,10 +45,10 @@ class MEG_EEG_Files(object):
             - list of folders
         '''
         links = OmegaConf.load(self.links)
-        folders = [Path(e) for e in links.get('dataFolders')]
-        self.folders = [e for e in folders if e.is_dir()]
-        logger.info(f'Found linked folders: {self.folders}')
-        return self.folders
+        folders = [Path(e) for e in links.get('linkedFolders')]
+        self.linked_folders = [e for e in folders if e.is_dir()]
+        logger.info(f'Found linked_folders: {self.linked_folders}')
+        return self.linked_folders
 
     def search_files(self) -> pd.DataFrame:
         '''
@@ -60,21 +60,37 @@ class MEG_EEG_Files(object):
             - The DataFrame of the found files, the columns are:
                 path, name, suffix, mark
         '''
-        # Search all the files using everything
-        output = subprocess.check_output(
-            args=['es.exe', '-csv', '/a-d', '-path', 'D:\\脑机接口专项', '*'])
 
-        # Re encode the output into utf-8
-        bytes = output.decode("gbk").encode('utf-8')
-        buffer = io.BytesIO(bytes)
+        def read_files(linked_folder: Path) -> pd.DataFrame:
+            # Search all the files using everything
+            output = subprocess.check_output(
+                args=[
+                    'es.exe',  # Using the es.exe
+                    '-csv',  # Output CSV format
+                    '/a-d',  # Only output files (not directories and others)
+                    '-path', linked_folder.as_posix(),  # Only search inside the folder
+                    '*',  # I need every file
+                ])
 
-        # Make it a data frame
-        df = pd.read_csv(buffer)
+            # Re-encode the output into utf-8.
+            # ! If there are encoding problems, check this part.
+            bytes = output.decode("gbk").encode('utf-8')
+
+            # Make it a data frame
+            buffer = io.BytesIO(bytes)
+            df = pd.read_csv(buffer)
+            df['linkedFolder'] = linked_folder
+            return df
+
+        dfs = [read_files(folder) for folder in self.linked_folders]
+
+        df = pd.concat(dfs, axis=0)
+        df.index = range(len(df))
         df['path'] = df['Filename'].map(Path)
         df.pop('Filename')
         df['name'] = df['path'].map(lambda d: d.name)
         df['suffix'] = df['path'].map(lambda d: d.suffix)
-        df['fileMark'] = 'N.A.'
+        df['dataType'] = 'N.A.'
         self.files = df
 
         # Parse the files by name
@@ -87,13 +103,37 @@ class MEG_EEG_Files(object):
         Several parsing operations.
         '''
         self._parse_data_for_bdf_files()
+        return
 
     def _parse_data_for_bdf_files(self):
         '''
         Find and mark .bdf files.
+
+        It supposes the .bdf file are in pair.
+        - data.bdf, is the data file.
+        - evt.bdf, in the same folder, is the event file.
+
+        ```python
+        # Read and link them in mne package
+        raw = mne.io.read_raw('data.bdf')
+        annotations = mne.read_annotations('evt.bdf')
+        raw.set_annotations(annotations)
+        ```
+
+        The .bdf format document:
+        - https://mne.tools/stable/auto_tutorials/io/20_reading_eeg_data.html
+        - https://www.biosemi.com/faq/file_format.htm
+
+        BioSemi data format (.bdf)
+
+        The BDF format is a 24-bit variant of the EDF format used by EEG systems manufactured by BioSemi. It can be imported with mne.io.read_raw_bdf().
+        BioSemi amplifiers do not perform “common mode noise rejection” automatically. The signals in the EEG file are the voltages between each electrode and the CMS active electrode, which still contain some CM noise (50 Hz, ADC reference noise, etc.). The BioSemi FAQ provides more details on this topic. Therefore, it is advisable to choose a reference (e.g., a single channel like Cz, average of linked mastoids, average of all electrodes, etc.) after importing BioSemi data to avoid losing signal information. The data can be re-referenced later after cleaning if desired.
         '''
         # Only work with the rows marked by N.A.
-        qp = 'fileMark=="N.A."'
+        qp = 'dataType=="N.A."'
+
+        # The column name for the data type
+        data_type_column = 'dataType'
 
         # Drop the evt.bdf files since it is used by its data.bdf
         query = ' & '.join([qp, 'name == "evt.bdf"'])
@@ -105,13 +145,13 @@ class MEG_EEG_Files(object):
         # Find data.bdf files
         query = ' & '.join([qp, 'name == "data.bdf"'])
         df = self.files.query(query)
-        self.files.loc[df.index, 'mark'] = 'bdf'
+        self.files.loc[df.index, data_type_column] = 'bdf'
         logger.debug(f'Found .bdf files: {len(df)}')
 
         # Mark abnormal .bdf files
         query = ' & '.join([qp, 'suffix == ".bdf"'])
         df = self.files.query(query)
-        self.files.loc[df.index, 'mark'] = 'bdf (abnormal)'
+        self.files.loc[df.index, data_type_column] = 'bdf (abnormal)'
         logger.debug(f'Found abnormal .bdf files: {len(df)}')
         return
 
