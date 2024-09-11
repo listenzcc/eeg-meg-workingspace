@@ -100,6 +100,13 @@ async def index(request: Request):
     return wa.jinja2_templates.TemplateResponse('index.html', context)
 
 
+@wa.get('/templates/{arbitrary_path:path}')
+async def get_templates_item(request: Request, arbitrary_path: str):
+    '''Get templates by arbitrary path'''
+    context = {'request': request}
+    return wa.jinja2_templates.TemplateResponse(arbitrary_path, context)
+
+
 @wa.get('/getDoc')
 async def get_doc(request: Request, relPath: str):
     print(relPath)

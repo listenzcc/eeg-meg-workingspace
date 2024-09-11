@@ -11,8 +11,8 @@
 
     <section class="bg-white max-w-3xl px-2 mx-auto py-3 md:px-4 md:py-6">
         <div class="border-b border-black pb-3">
-            <div class="flex items-center">
-                <span class="block font-bold no-underline">Home page</span>
+            <div class="flex items-center text-indigo-600">
+                <span class="block font-bold no-underline">Document / Project introduction</span>
             </div>
         </div>
         <div class="mt-4 md:mt-6 lg:mt-8">
@@ -22,6 +22,10 @@
     </section>
 
     {% include "components/footer.html" %}
+
+    <script>
+        renderMarkdownIntoHTML('intro.md', document.getElementById('mdContainer'))
+    </script>
 
 </body>
 
