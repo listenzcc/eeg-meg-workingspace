@@ -20,8 +20,8 @@ Functions:
 
 // %% ---- 2024-09-10 ------------------------
 // Function and class
-function renderMarkdownIntoHTML(relPath, dom) {
-    d3.json(`/getDoc?relPath=${relPath}`).then((json) => {
+function renderMarkdownIntoHTML(topic, path, dom) {
+    d3.json(`/getContentMd?topic=${topic}&path=${path}`).then((json) => {
         let mdi = markdownit(
             {
                 highlight: function (str, lang) {
@@ -37,11 +37,30 @@ function renderMarkdownIntoHTML(relPath, dom) {
                 }
             }
         ),
-            html = mdi.render(json.content),
-            dsd = d3.select(dom);
+            html = mdi.render(json.content);
 
-        // Set the innerHTML
-        dom.innerHTML = html;
+        // Clear the current content
+        dom.innerHTML = ''
+
+        /* Insert the new content
+            Author              Date
+            Title
+            -------------------------
+            Others
+        */
+        let head = d3.select(dom).append('div'),
+            hp = head.append('p').attr('class', 'flex justify-between gap-x-6 py-5'),
+            dsd = d3.select(dom).append('div');
+
+        // Insert the html of markdown
+        dsd.node().innerHTML = html;
+
+        // Append title
+        head.append('h1').attr("class", "my-8 text-4xl font-bold").text(json.Title)
+
+        // Append author and date
+        hp.append('span').text(json.Author).attr("class", "text-sm italic leading-6 text-gray-900")
+        hp.append('span').text(json.Date).attr("class", "mt-1 text-sm leading-5 text-gray-500")
 
         // Attach the class
         dsd.selectAll('p').attr('class', 'text-base py-2')

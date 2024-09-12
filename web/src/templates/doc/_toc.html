@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    {% include "src/head.html" %}
+</head>
+
+<body class="bg-white">
+
+    {% include "components/header.html" %}
+
+    <section class="bg-white max-w-3xl px-2 mx-auto py-3 md:px-4 md:py-6">
+        <div class="border-b border-black pb-3">
+            <div class="flex items-center text-indigo-600">
+                <span class="block font-bold no-underline">Document | {{ topic }}</span>
+            </div>
+        </div>
+
+        <div class="mt-4 md:mt-6 lg:mt-8">
+            <section class="pr-4 mt-4 lg:text-xl lg:pr-0">
+                <ul id="tocContainer" role="list" class="divide-y divide-gray-100">
+                    {% include "components/processingSpin.html"%}
+                    <!-- Example, it is emptied when the new toc comes -->
+                    <li class="flex justify-between gap-x-6 py-5">
+                        <div class="flex min-w-0 gap-x-4">
+                            <div class="min-w-0 flex-auto">
+                                <p class="text-lg font-semibold leading-6 text-gray-900">Title (in waiting)</p>
+                                <p class="mt-1 truncate text-sm leading-5 text-gray-500">Url (in waiting)</p>
+                            </div>
+                        </div>
+                        <div class="shrink-0 sm:flex sm:flex-col sm:items-end">
+                            <p class="text-sm italic leading-6 text-gray-900">Author (in waiting)</p>
+                            <p class="mt-1 text-sm leading-5 text-gray-500">Date (in waiting)</p>
+                        </div>
+                    </li>
+                </ul>
+            </section>
+        </div>
+    </section>
+
+    {% include "components/footer.html" %}
+
+    <script type="text/javascript">
+        d3.json('/searchContents?topic={{ topic }}').then(array => {
+            console.log(array)
+            let container = d3.select('#tocContainer'),
+                path2url = (p) => "/mkDocumentPage?topic={{ topic }}&path=" + p;
+
+            // Remove all the contents 
+            container.node().innerHTML = ''
+            // container.selectAll('li').data([]).exit().remove('li')
+
+            let lis = container.selectAll('li').data(array).enter().append('li').attr('class', 'flex justify-between gap-x-6 py-5'),
+                d1 = lis.append('div').attr('class', 'flex min-w-0 gap-x-4').append('div').attr('class', 'min-w-0 flex-auto'),
+                d2 = lis.append('div').attr('class', "shrink-0 sm:flex sm:flex-col sm:items-end");
+
+            d1.append('a').text(d => d.title).attr('class', "text-lg font-semibold leading-6 text-gray-900").attr('href', d => path2url(d.path))
+            d1.append('p').text(d => path2url(d.path)).attr('class', "mt-1 truncate text-sm leading-5 text-gray-500")
+            d2.append('p').text(d => d.author).attr('class', "text-sm italic leading-6 text-gray-900")
+            d2.append('p').text(d => d.date).attr('class', "mt-1 text-sm leading-5 text-gray-500")
+        })
+    </script>
+
+</body>
+
+</html>

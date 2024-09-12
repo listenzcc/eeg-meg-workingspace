@@ -25,6 +25,7 @@ from fastapi.templating import Jinja2Templates
 from pathlib import Path
 from typing import Annotated
 
+from .util import contents_manager
 from . import logger, ProjectInfo
 
 
@@ -92,23 +93,60 @@ wa = WebApp()
 # Play ground
 
 # ----------------------------------------
-# ---- Routine ----
+# ---- Homepage routine ----
 @wa.get('/')
-async def index(request: Request):
+async def __index(request: Request):
     '''Homepage'''
     context = {'request': request}
     return wa.jinja2_templates.TemplateResponse('index.html', context)
 
 
+# ----------------------------------------
+# ---- Markdown content routine ----
+
+@wa.get('/mkContentTocPage')
+async def __mk_content_toc(request: Request, topic: str):
+    _toc = 'doc/_toc.html'
+    context = {'request': request, 'topic': topic}
+    return wa.jinja2_templates.TemplateResponse(_toc, context)
+
+
+@wa.get('/searchContents')
+async def __search_contents(request: Request, topic: str):
+    folder = ProjectInfo.contentRoot.joinpath(topic)
+    return contents_manager.search_contents(folder)
+
+
+@wa.get('/getContentMd')
+async def __get_content_md(request: Request, topic: str, path: str):
+    p = ProjectInfo.contentRoot.joinpath(topic, path)
+    dct = contents_manager.read_md_file(p)
+    dct.update({'topic': topic, 'path': path})
+    return dct
+
+
+# ----------------------------------------
+# ---- Document page routine ----
+
+@wa.get('/mkDocumentPage')
+async def __mk_document_page(request: Request, topic: str, path: str):
+    context = {'request': request, 'topic': topic, 'path': path}
+    _container = 'doc/_container.html'
+    return wa.jinja2_templates.TemplateResponse(_container, context)
+
+# ----------------------------------------
+# ---- Others routine ----
+
+
 @wa.get('/templates/{arbitrary_path:path}')
-async def get_templates_item(request: Request, arbitrary_path: str):
+async def __get_templates_item(request: Request, arbitrary_path: str):
     '''Get templates by arbitrary path'''
     context = {'request': request}
     return wa.jinja2_templates.TemplateResponse(arbitrary_path, context)
 
 
 @wa.get('/getDoc')
-async def get_doc(request: Request, relPath: str):
+async def __get_doc(request: Request, relPath: str):
     print(relPath)
     p = ProjectInfo.webRoot.joinpath('doc', relPath)
 

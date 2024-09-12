@@ -1,8 +1,4 @@
----
-Author: Chuncheng Zhang
-Title: Welcome to my EEG&MEG Working Space
-Date: 2024-9-12
----
+# Example document without heading comments
 
 The work is shipped by Chuncheng Zhang.
 

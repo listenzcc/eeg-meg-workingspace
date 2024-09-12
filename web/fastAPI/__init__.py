@@ -34,6 +34,8 @@ class ProjectInfo:
     webRoot = Path(__file__).parent.parent
     # The folder containing the 'webRoot' and 'python'
     projectRoot = webRoot.parent
+    # The folder containing the md contents
+    contentRoot = projectRoot.joinpath('content')
 
 
 # %% ---- 2024-09-10 ------------------------
